@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Store</title>
+<link rel="shortcut icon" href="favicon.ico"/>
+<link rel="bootstrap stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link rel="navbar stylesheet" href="css/navbar.css">
+<script type="text/javascript">
+  var count=[0,0,0,0,0,0,0];
+  var discount=0;
+  var tCost=0;
+
+  //When add to cart button is pressed, updates count for that item
+  function addCart(choice){
+    if(choice==1){
+      count[0]++;
+    }
+    if(choice==2){
+      count[1]++;
+    }
+    if(choice==3){
+      count[2]++;
+    }
+    if(choice==4){
+      count[3]++;
+    }
+    if(choice==5){
+      count[4]++;
+    }
+    if(choice==6){
+      count[5]++;
+    }
+    if(choice==7){
+      count[6]++;
+    }
+  }
+
+  //Empties cart
+  function clearCart() {
+    $("#cartSpace").empty();
+    count=[0,0,0,0,0,0,0];
+    $('#creditCard').val("");
+    $('#name').val("");
+  }
+
+  //Checks whether their is input in the email check box
+  function check_email(){
+      var flag = true;
+      $('#toCheck .form-control').each(function(){
+          if ($(this).val() == ""){
+              // alert('Please enter a value for ' + $(this).attr('name'));
+              flag =  false;
+          }
+      });
+
+      return flag;
+  }
+
+  //Checks to make sure the shopping cart inputs are not empty
+  function check_form(){
+      var flag = true;
+      $('#toSend .form-control').each(function(){
+          if ($(this).val() == ""){
+              // alert('Please enter a value for ' + $(this).attr('name'));
+              flag =  false;
+          }
+      });
+
+      return flag;
+  }
+
+  //sends data to mysql server to confirm email is in database
+  function emailCheck() {
+    //Checks if blank
+    var flag = check_email();
+    if (!flag) {
+      // alert to fill out email
+      $("#notValid").show();
+      return;
+    }
+    var data = $('#toCheck').serialize();
+    $.ajax({type:'Get', url: 'checkEmail.php', data:data, success: function(response) {
+      //trigger modal
+      if(response=="invalid"){
+        // alert("you must use a registered email address to leave feedback")
+        $("#formAlert").show();
+      }
+      else if (response == "success") {
+        discount=1;
+        $("#congrats").show();
+        setTimeout(function()
+        {
+          $("#congrats").hide(750);
+          $('#email').val("");
+        }, 4000);
+      }
+
+    }});
+  }
+
+  //Fills text for shopping cart
+  function updateCart(){
+    var toList="";
+    var dCost=0;
+    $("#cartSpace").empty();
+    if(count[0]){
+      toList += "<p><strong>"+count[0]+" Dixon Ticonderoga Pencil(s) for $0.99   </strong><button type='button' class='btn btn-xs' id='remove' onclick='removeCart(0)'>Remove</button></p>";
+    }
+    if(count[1]){
+      toList += "<p><strong>"+count[1]+" Composition Notebook(s) for $1.99    </strong><button type='button' class='btn btn-xs' id='remove' onclick='removeCart(1)'>Remove</button></p>";
+    }
+    if(count[2]){
+      toList += "<p><strong>"+count[2]+" Laptop(s) for $749.99    </strong><button type='button' class='btn btn-xs' id='remove' onclick='removeCart(2)'>Remove</button></p>";
+    }
+    if(count[3]){
+      toList += "<p><strong>"+count[3]+" Hiking Backpack(s) for $79.99    </strong><button type='button' class='btn btn-xs' id='remove' onclick='removeCart(3)'>Remove</button></p>";
+    }
+    if(count[4]){
+      toList += "<p><strong>"+count[4]+" Tent(s) for $139.99    </strong><button type='button' class='btn btn-xs' id='remove' onclick='removeCart(4)'>Remove</button></p>";
+    }
+    if(count[5]){
+      toList += "<p><strong>"+count[5]+" Snow Jacket(s) for $119.99   </strong><button type='button' class='btn btn-xs' id='remove' onclick='removeCart(5)'>Remove</button></p>";
+    }
+    if(count[6]){
+      toList += "<p><strong>"+count[6]+" Swimsuit(s) for $29.99   </strong><button type='button' class='btn btn-xs' id='remove' onclick='removeCart(6)'>Remove</button></p>";
+    }
+    tCost=((count[0])*0.99)+((count[1])*1.99)+((count[2])*749.99)+((count[3])*79.99)+((count[4])*139.99)+((count[5])*119.99)+((count[6])*29.99);
+    $("#cartSpace").append(toList);
+    if(discount){
+      dCost=tCost;
+      dCost-=((tCost)*(0.15));
+      var toAddD="<br><br><p><strong>Subtotal: "+(tCost).toFixed(2)+"</strong></p><p>*Apply 15% off*</p><p><strong>Total: "+(dCost).toFixed(2)+"</strong></p>";
+      $('#total').val("");
+      $("#cartSpace").append(toAddD);
+      $('#total').val($('#total').val() + dCost);
+    }
+    else{
+      var toAdd="<br><br><p><strong>Total: "+(tCost).toFixed(2)+"</strong></p>";
+      $('#total').val("");
+      $("#cartSpace").append(toAdd);
+      $('#total').val($('#total').val() + tCost);
+    }
+  }
+
+  //Toggles between shopping cart and store catalog
+  $(function () {
+    $('#cartBTN').click(function() {
+      $('#checkoutForm').toggle();
+      $('#emailForm').toggle();
+      $('#store').toggle();
+      updateCart();
+    });
+  });
+
+  //Adds name, payment, and total to mysql database
+  function sendForm() {
+    $("#creditcardparent").removeClass("has-error");
+    if(tCost==0){
+      clearCart();
+      return;
+    }
+    var flag = check_form();
+    if (!flag) {
+      $("#formInvalid").show(100);
+      return;
+    }
+    //Credit card regex
+    var ccregex = /^\d{16}$/;
+    var ccvalid = ccregex.test($("#creditCard").val());
+    if(!ccvalid){
+      $("#creditcardparent").addClass("has-error");
+      $("#formInvalid").show(100);
+      return;
+    }
+    var data = $('#toSend').serialize();
+    $.ajax({type:'POST', url: 'addPurchase.php', data:data, success: function(response) {
+      if (response == "success")
+        $("#thanks").show();
+        setTimeout(function()
+        {
+          $("#thanks").hide(750);
+          $("#cartSpace").empty();
+          count=[0,0,0,0,0,0,0];
+          $('#creditCard').val("");
+          $('#name').val("");
+        }, 4000);
+      }});
+  }
+  //Removes quantity 1 of item from cart and then updates
+  function removeCart(id){
+    if(id==0){
+      count[0]--;
+    }
+    if(id==1){
+      count[1]--;
+    }
+    if(id==2){
+      count[2]--;
+    }
+    if(id==3){
+      count[3]--;
+    }
+    if(id==4){
+      count[4]--;
+    }
+    if(id==5){
+      count[5]--;
+    }
+    if(id==6){
+      count[6]--;
+    }
+    updateCart();
+  }
+</script>
+<style type="text/css">
+body{
+  margin: auto;
+  width: 100%;
+  font-family: "AvenirNext-Ultralight", Calibri, "Gill Sans", sans-serif;
+  color: white;
+  background-color: #006699;
+}
+#map{
+  border-style: solid;
+  border-top-width: 0px;
+  border-left-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  background-color: #990000;
+  padding: 50px 20px 35px 20px;
+  display: block;
+}
+#blurb{
+  text-indent: 50px;
+}
+#cart{
+  padding-top: 20px;
+  text-align: center;
+  font-size: 30px;
+}
+#myModal{
+  color:black;
+  margin-top: 250px;
+}
+#itemHead{
+  font-weight: bold;
+  margin: 50px 10px 0px 10px;
+  text-align: center;
+  border-style: solid;
+  border-left-width: 1px;
+  border-right-width: 1px;
+  border-top-width: 1px;
+  border-bottom-width: 0px;
+  padding: 10px 10px 0px 10px;
+}
+#item{
+  font-weight: bold;
+  margin: 0px 10px 0px 10px;
+  text-align: center;
+  border-style: solid;
+  border-left-width: 1px;
+  border-right-width: 1px;
+  border-top-width: 1px;
+  border-bottom-width: 0px;
+  padding: 25px 25px 25px 25px;
+}
+#itemFoot{
+  margin: 0px 10px 5px 10px;
+  border-style: solid;
+  border-left-width: 0px;
+  border-right-width: 0px;
+  border-top-width: 1px;
+  border-bottom-width: 0px;
+}
+#buy{
+  background-color:#000080;
+  color: white;
+  font-weight: bold;
+}
+#remove{
+  background-color:#000080;
+  color: white;
+}
+#navblocker{
+  height: 52px;
+}
+#note{
+  text-align: center;
+  font-weight: 600;
+}
+#img{
+  position: absolute;
+  z-index: -600;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+#formAlert{
+  display: none;
+}
+
+#formInvalid{
+  display: none;
+}
+#notValid{
+  display: none;
+}
+#thanks{
+  display: none;
+  color:green;
+}
+#congrats{
+  display: none;
+  color:green;
+}
+#checkoutForm{
+  position: relative;
+  top: 50px;
+  color: black;
+  padding: 10px 20px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.65);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  display: none;
+  margin:auto;
+  width: 80%
+}
+#emailForm{
+  position: relative;
+  top: 30px;
+  color: black;
+  padding: 5px 20px 5px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  margin:auto;
+  width: 80%
+}
+#store{
+  padding: 5px 20px 5px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  margin:auto;
+  color: #000080;
+  width: 80%
+}
+#hiddenInput{
+  display: none;
+}
+</style>
+</head>
+<body>
+
+  <nav class="navbar navbar-inverse" data-spy="affix">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a href="home.html"> <img id = "logo" src = "images/logo.png" width = "40" height = "40"></a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="home.html"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+          <li><a href="schedule.html"><span class="glyphicon glyphicon-calendar"></span> Schedule</a></li>
+          <li class="active"><a href="catalog.html"><span class="glyphicon glyphicon-gift"></span> Store</a></li>
+          <li><a href="forum.html"><span class="glyphicon glyphicon-inbox"></span> Feedback</a></li>
+          <li><a href="visualization.html"><span class="glyphicon glyphicon-map-marker"></span> Enrollment Data</a></li>
+          <li><a href="activity.html"><span class="glyphicon glyphicon-th-list"></span> Activities</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="navblocker">
+
+  <div id="map">
+    <div class = "row">
+      <div class="col-sm-11">
+        <h1>What your camper will need</h1>
+        <h4 id="blurb">Browse through and purchase supplies for your child! Switch between shopping cart and catalog by clicking the cart icon!</h4>
+      </div>
+      <div id="cart" class="col-sm-1">
+        <span id="cartBTN" class="glyphicon glyphicon-shopping-cart" style="cursor:pointer"></span>
+      </div>
+    </div>
+  </div>
+
+  <img id = "img" class="img-responsive" src="images/lak.jpg" alt="wall">
+
+  <div id="wrapper">
+    <div id="checkoutForm">
+      <div id="thanks">
+        <h1>Thank you for your purchase!</h1>
+      </div>
+      <div id="header">
+        <h1>Shopping Cart</h1>
+        <h4>Your experience matters</h4>
+        <div id="cartSpace">
+        </div>
+        <div id="formInvalid" class="alert alert-danger fade in">
+          <a class="close" onclick="$('.alert').hide()">×</a>
+          <strong>You're not done!</strong> You must complete all fields.
+        </div>
+      </div>
+      <form id = "toSend" role="form">
+        <div class="form-group">
+          <label for="name">Name:</label>
+          <input type="text" name="name" class="form-control" id="name">
+        </div>
+        <div class="form-group" id="creditcardparent">
+          <label for="Credit Card">Credit Card Number:</label>
+          <input type="creditCard" name="creditCard" class="form-control" id="creditCard" placeholder="xxxxxxxxxxxxxxxx">
+        </div>
+        <div class="form-group" id="hiddenInput">
+          <label for="total">Total</label>
+          <input type="total" name="total" class="form-control" id="total">
+        </div>
+        <button type="button" onclick="sendForm()" name="submit" class="btn btn-default">Checkout</button>
+        <button type="button" onclick="clearCart()" name="submit" class="btn btn-danger">Clear Cart</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="store">
+    <div id="wrapper">
+      <div id="emailForm">
+        <div id="congrats">
+          <h1><strong>You got 15% off!</strong></h1>
+        </div>
+        <div id="header">
+          <h2>Enter your email if you have a registered student and receive 15% off!</h2>
+          <div id="formAlert" class="alert alert-danger fade in">
+            <a class="close" onclick="$('.alert').hide()">×</a>
+            <strong>Invalid Email!</strong> You must enter a registered email to receive the discount.
+          </div>
+          <div id="notValid" class="alert alert-danger fade in">
+            <a class="close" onclick="$('.alert').hide()">×</a>
+            <strong>You need to enter your email!</strong>
+          </div>
+        </div>
+        <form id = "toCheck" role="form">
+          <div class="form-group">
+            <label for="email">Email address:</label>
+            <input type="email" name="email" class="form-control" id="email">
+          </div>
+          <button type="button" id="emailBTN" onclick="emailCheck()" name="submit" class="btn btn-default">Get Discount</button>
+        </form>
+      </div>
+    </div>
+    <div id="grid">
+      <div id="itemHead" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Item</p>
+        </div>
+        <div class="col-sm-3">
+          <p>Image</p>
+        </div>
+        <div class="col-sm-3">
+          <p>Price</p>
+        </div>
+        <div class="col-sm-2">
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="item" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Dixon Ticonderoga</p>
+        </div>
+        <div class="col-sm-3">
+          <img src="images/dixon.png" class="img-thumbnail" alt="Pencil (Dixon Ticonderoga)" width="100" height="100">
+        </div>
+        <div class="col-sm-3">
+          <p>$0.99</p>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn" id="buy" onclick="addCart(1)" data-toggle="modal" data-target="#myModal">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="myModal" class="modal fade" role="dialog">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title">Success!</h2>
+          </div>
+          <div class="modal-body">
+            <p>This item was added to the cart</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="item" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Composition Notebook</p>
+        </div>
+        <div class="col-sm-3">
+          <img src="images/comp.png" class="img-thumbnail" alt="Composition Notebook" width="100" height="100">
+        </div>
+        <div class="col-sm-3">
+          <p>$1.99</p>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn" id="buy" onclick="addCart(2)" data-toggle="modal" data-target="#myModal">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="item" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Laptop</p>
+        </div>
+        <div class="col-sm-3">
+          <img src="images/lap.png" class="img-thumbnail" alt="Laptop" width="100" height="100">
+        </div>
+        <div class="col-sm-3">
+          <p>$749.99</p>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn" id="buy" onclick="addCart(3)" data-toggle="modal" data-target="#myModal">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="item" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Hiking Backpack</p>
+        </div>
+        <div class="col-sm-3">
+          <img src="images/bp.png" class="img-thumbnail" alt="Backpack" width="100" height="100">
+        </div>
+        <div class="col-sm-3">
+          <p>$79.99</p>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn" id="buy" onclick="addCart(4)" data-toggle="modal" data-target="#myModal">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="item" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Tent</p>
+        </div>
+        <div class="col-sm-3">
+          <img src="images/tent.png" class="img-thumbnail" alt="Tent" width="100" height="100">
+        </div>
+        <div class="col-sm-3">
+          <p>$139.99</p>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn" id="buy" onclick="addCart(5)" data-toggle="modal" data-target="#myModal">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="item" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Snow Jacket</p>
+        </div>
+        <div class="col-sm-3">
+          <img src="images/jack.png" class="img-thumbnail" alt="Jacket" width="100" height="100">
+        </div>
+        <div class="col-sm-3">
+          <p>$119.99</p>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn" id="buy" onclick="addCart(6)" data-toggle="modal" data-target="#myModal">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="item" class="row">
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-3">
+          <p>Swimsuit (Male)</p>
+        </div>
+        <div class="col-sm-3">
+          <img src="images/swm.png" class="img-thumbnail" alt="Swimsuit-M" width="100" height="100">
+        </div>
+        <div class="col-sm-3">
+          <p>$29.99</p>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn" id="buy" onclick="addCart(7)" data-toggle="modal" data-target="#myModal">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid">
+      <div id="itemFoot" class="row">
+        <div class="col-sm-12">
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12">
+        <p id="note">*All items will be available for pickup at camp locations.*</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

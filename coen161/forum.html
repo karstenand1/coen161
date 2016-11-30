@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Feedback</title>
+<link rel="shortcut icon" href="favicon.ico"/>
+<link rel="bootstrap stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link rel="navbar stylesheet" href="css/navbar.css">
+<style type="text/css">
+body{
+  margin: auto;
+  width: 100%;
+  background-color: #006699;
+}
+
+h1{
+  text-align: center;
+  font-family: "AvenirNext-Ultralight", Calibri, "Gill Sans", sans-serif;
+  font-size: 60px;
+  margin-bottom: 10px;
+
+}
+
+h4{
+  text-align: center;
+  font-family: "AvenirNext-Ultralight", Calibri, "Gill Sans", sans-serif;
+  font-size: 25px;
+  margin-bottom: 10px;
+}
+
+#navblocker{
+  height: 52px;
+}
+
+#lift{
+  position: fixed;
+  z-index: -600;
+}
+
+#formAlert{
+  display: none;
+}
+
+#formInvalid{
+  display: none;
+}
+
+#thanks{
+  display: none;
+}
+
+#commentForm{
+  position: relative;
+  top: 50px;
+  padding: 10px 20px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+#comments{
+  position: relative;
+  top: 50px;
+  margin-top: 20px;
+  padding: 20px 20px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+#wrapper{
+  margin:auto;
+  width: 80%
+}
+
+</style>
+<script>
+
+//load most recent 5 comments on page load
+$(document).ready(function() {
+    updateComments();
+});
+
+//get most recent comments from DB and append them to the comments div
+function updateComments(){
+  var i;
+  $.ajax({type:'GET', url: 'getComments.php', dataType:'json', success: function(response) {
+    for(i=response.length - 1;i>response.length - 6;i--){
+      var toAdd = "<div class='panel panel-default'> <div class='panel-heading'><strong>" + response[i].name + "</strong> says:</div><div class='panel-body'>" + response[i].comment + "</div><div class='panel-footer'> Overall Experience: " + response[i].rate + "</div></div>"
+      $("#comments").append(toAdd);
+    }
+  }});
+}
+//make sure each field has been filled out in form
+function check_form(){
+    var flag = true;
+    $('#toSend .form-control').each(function(){
+        if ($(this).val() == ""){
+            // alert('Please enter a value for ' + $(this).attr('name'));
+            flag =  false;
+        }
+    });
+    return flag;
+}
+
+//send comment to DB and update DOM on callback
+function sendForm() {
+  //check if form has been filled out
+  var flag = check_form();
+  if (!flag) {
+    $("#formInvalid").show();
+    return;
+  }
+  //create data string
+  var data = $('#toSend').serialize();
+  //send comment to DB
+  $.ajax({type:'POST', url: 'addComment.php', data:data, success: function(response) {
+    if(response=="invalid"){
+      $("#formAlert").show();
+    }
+    else if (response == "success") {
+      $("#header").hide(100);
+      $("#toSend").hide(100);
+      $("#thanks").show(500);
+      $('#comments').empty();
+      updateComments();
+    }
+    else {
+      alert(response);
+    }
+  }});
+}
+
+</script>
+</head>
+<body>
+
+  <nav class="navbar navbar-inverse" data-spy="affix">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a href="home.html"> <img id = "logo" src = "images/logo.png" width = "40" height = "40"></a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="home.html"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+          <li><a href="schedule.html"><span class="glyphicon glyphicon-calendar"></span> Schedule</a></li>
+          <li><a href="catalog.html"><span class="glyphicon glyphicon-gift"></span> Store</a></li>
+          <li class="active"><a href="forum.html"><span class="glyphicon glyphicon-inbox"></span> Feedback</a></li>
+          <li><a href="visualization.html"><span class="glyphicon glyphicon-map-marker"></span> Enrollment Data</a></li>
+          <li><a href="activity.html"><span class="glyphicon glyphicon-th-list"></span> Activities</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="navblocker"></div>
+
+  <img id = "lift" class="img-responsive" src="images/lift.jpg" alt="Lift">
+
+<div id="wrapper">
+  <div id="commentForm">
+  <div id="thanks">
+    <h1>Thank you for your feedback.</h1>
+  </div>
+  <div id="header">
+  <h1>Feedback</h1>
+  <h4>Your experience matters</h4>
+  <div id="formAlert" class="alert alert-danger">
+    <strong>Invalid Email!</strong> You must enter a registered email to leave feedback.
+  </div>
+  <div id="formInvalid" class="alert alert-danger">
+    <strong>You're not done!</strong> You must complete all fields.
+  </div>
+</div>
+  <form id = "toSend" role="form">
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <input type="text" name="name" class="form-control" id="name">
+    </div>
+    <div class="form-group">
+      <label for="email">Email address:</label>
+      <input type="email" name="email" class="form-control" id="email">
+    </div>
+    <div class="form-group">
+      <label for="comment">Feedback:</label>
+      <textarea class="form-control" name = "comment" rows="5" id="comment"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="rate">Overall Experience:</label>
+      <div>
+      <select class="form-control" name="rate" id="rate">
+        <option>Excellent</option>
+        <option>Very Good</option>
+        <option>Good</option>
+        <option>Moderate</option>
+        <option>Poor</option>
+      </select>
+    </div>
+    </div>
+    <button type="button" onclick="sendForm()" name="submit" class="btn btn-default">Submit</button>
+  </form>
+  </div>
+
+  <div id="comments">
+    <!-- ajax will add html comment elements here -->
+  </div>
+
+</body>
+</html>

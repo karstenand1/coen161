@@ -1,0 +1,21 @@
+.navbar-inverse{
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+  margin-bottom: 0px;
+  z-index: 1000000;
+}
+
+#logo{
+  margin-top: 5px;
+  margin-right: 10px;
+}
+
+.affix {
+      top: 0;
+      width: 100%;
+  }
+  .affix + .container-fluid {
+      padding-top: 70px;
+  }

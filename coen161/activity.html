@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Activities</title>
+<link rel="shortcut icon" href="favicon.ico"/>
+<link rel="bootstrap stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link rel="navbar stylesheet" href="css/navbar.css">
+
+<script>
+      //Disables arrow keys from scrolling when playing game
+      window.addEventListener("keydown", function(e){
+          // space and arrow keys
+          if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1){
+              e.preventDefault();
+          }
+      }, false);
+
+      //Contained in a function to allow button to start game and the game to end after won/lost
+      function playGame(){
+          var canvas = document.getElementById("myCanvas");
+          var ctx = canvas.getContext("2d");
+
+          //Ball variables
+          var x = canvas.width/2;
+          var y = canvas.height-30;
+          var dx = 2;
+          var dy = -2;
+          var ballRadius = 10;
+
+          //Paddle variables
+          var paddleHeight = 10;
+          var paddleWidth = 75;
+          var paddleX = (canvas.width-paddleWidth)/2;
+          var rightPressed = false;
+          var leftPressed = false;
+
+          //Brick variables
+          var brickRowCount = 3;
+          var brickColumnCount = 5;
+          var brickWidth = 75;
+          var brickHeight = 20;
+          var brickPadding = 10;
+          var brickOffsetTop = 30;
+          var brickOffsetLeft = 30;
+          var bricks = [];
+
+          //Initialize brick array
+          for(c=0; c<brickColumnCount; c++) {
+              bricks[c] = [];
+              for(r=0; r<brickRowCount; r++) {
+                  bricks[c][r] = { x: 0, y: 0, status: 1 };
+              }
+          }
+
+          //Lives and score variables
+          var score = 0;
+          var lives = 3;
+
+          //Draws ball
+          function drawBall(){
+              ctx.beginPath();
+              //Arc so 2pi=circle
+              ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+              ctx.fillStyle = "#DC143C";
+              ctx.fill();
+              ctx.closePath();
+          }
+          //Draws paddle
+          function drawPaddle(){
+              ctx.beginPath();
+              //Second parameter puts the paddle at the bottom of the screen
+              ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+              ctx.fillStyle = "#000080";
+              ctx.fill();
+              ctx.closePath();
+          }
+          //Draws the bricks
+          function drawBricks() {
+              for(c=0; c<brickColumnCount; c++) {
+                  for(r=0; r<brickRowCount; r++) {
+                      if(bricks[c][r].status == 1) {
+                          //Each brick gets a new x and y coord based off offset from last
+                          var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+                          var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+                          bricks[c][r].x = brickX;
+                          bricks[c][r].y = brickY;
+                          ctx.beginPath();
+                          ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                          ctx.fillStyle = "#000000";
+                          ctx.fill();
+                          ctx.closePath();
+                      }
+                  }
+              }
+          }
+
+          //Listeners to detect if arrow keys are pressed
+          document.addEventListener("keydown", keyDownHandler, false);
+          document.addEventListener("keyup", keyUpHandler, false);
+
+          //Handles whether left arrow key(37) or right arrow key(39) is pressed
+          function keyDownHandler(e){
+              if(e.keyCode == 39) {
+                  rightPressed = true;
+              }
+              else if(e.keyCode == 37){
+                  leftPressed = true;
+              }
+          }
+          //Handles whether left arrow key(37) or right arrow key(39) is released
+          function keyUpHandler(e){
+              if(e.keyCode == 39){
+                  rightPressed = false;
+              }
+              else if(e.keyCode == 37){
+                  leftPressed = false;
+              }
+          }
+
+          //Detects collision of ball and brick
+          function collisionDetection() {
+              for(c=0; c<brickColumnCount; c++) {
+                  for(r=0; r<brickRowCount; r++) {
+                      var b = bricks[c][r];
+                      if(b.status == 1) {
+                          //Uses offset of ballradius to detect the ball hitting the brick and changes direction and removes the brick
+                          if(x > b.x-ballRadius && x < b.x+brickWidth+ballRadius && y > b.y-ballRadius && y < b.y+brickHeight+ballRadius) {
+                              dy = -dy;
+                              b.status = 0;
+                              score++;
+                              if(score == brickRowCount*brickColumnCount) {
+                                  $("#win").show();
+                                  document.location.reload();
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          //Draws the score
+          function drawScore() {
+              ctx.font = "16px Arial";
+              ctx.fillStyle = "#000080";
+              ctx.fillText("Score: "+score, 8, 20);
+          }
+          //Draws the lives
+          function drawLives() {
+              ctx.font = "16px Arial";
+              ctx.fillStyle = "#DC143C";
+              ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+          }
+          //Actually draws on the canvas
+          function draw(){
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              drawBall();
+              drawPaddle();
+              collisionDetection();
+              drawBricks();
+              drawScore();
+              drawLives();
+
+              //Updates ball position so the ball appears to be moving
+              x += dx;
+              y += dy;
+              //Detects if ball hits side of canvas
+              if(x + dx > canvas.width-ballRadius || x + dx < ballRadius){
+                  dx = -dx;
+              }
+              //Detects if ball hits top of canvas
+              if(y + dy < ballRadius){
+                  dy = -dy;
+              }
+              //Detects if ball hits bottom of canvas and if the ball is between the x coord and the x coord+width then it hit the paddle and changes direction
+              else if (y + dy > canvas.height-ballRadius-paddleHeight && x > paddleX && x < paddleX + paddleWidth) {
+                  dy = -dy;
+              }
+              //Detects if ball hits bottom of canvas
+              else if(y + dy > canvas.height-ballRadius){
+                  //Didn't hit paddle and lose a life
+                  lives--;
+                  //If no lives game ends
+                  if(!lives) {
+                      $("#lose").show();
+                      document.location.reload();
+                  }
+                  //Else reloads canvas from starting position
+                  else {
+                      x = canvas.width/2;
+                      y = canvas.height-30;
+                      dx = 2;
+                      dy = -2;
+                      paddleX = (canvas.width-paddleWidth)/2;
+                  }
+              }
+              //Moves paddle right when key is pressed
+              if(rightPressed && paddleX < canvas.width-paddleWidth){
+                  paddleX += 7;
+              }
+              //Moves paddle left when key is pressed
+              else if(leftPressed && paddleX > 0){
+                  paddleX -= 7;
+              }
+              //continuously calls draw function to refresh/animate the canvas
+              requestAnimationFrame(draw);
+          }
+          //Calls draw function to start game
+          draw();
+      }
+
+</script>
+
+<style type="text/css">
+body{
+  margin: auto;
+  width: 100%;
+  font-family: "AvenirNext-Ultralight", Calibri, "Gill Sans", sans-serif;
+  color: white;
+  background-color: #006699;
+}
+#actvOne{
+  position:relative;
+  margin-top: 190px;
+  margin-bottom: 190px;
+  text-align:center;
+}
+#actvTwo{
+  position:relative;
+  margin-top: 250px;
+  margin-bottom: 130px;
+  text-align:center;
+}
+#btn{
+  text-align:center;
+  padding-top:10px;
+}
+#map{
+  border-style: solid;
+  border-top-width: 0px;
+  border-left-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  background-color: #990000;
+  padding: 50px 20px 35px 20px;
+  display: block;
+}
+#blurb{
+  text-indent: 50px;
+}
+#play{
+  background-color:#000080;
+  font-weight: bold;
+}
+#navblocker{
+  height: 52px;
+}
+#img{
+  position: absolute;
+  z-index: -600;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+canvas {
+  background: rgba(255, 255, 255, 0.25);
+  display: block;
+  margin: 0 auto;
+}
+</style>
+</head>
+<body>
+
+  <nav class="navbar navbar-inverse" data-spy="affix">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a href="home.html"> <img id = "logo" src = "images/logo.png" width = "40" height = "40"></a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="home.html"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+          <li><a href="schedule.html"><span class="glyphicon glyphicon-calendar"></span> Schedule</a></li>
+          <li><a href="catalog.html"><span class="glyphicon glyphicon-gift"></span> Store</a></li>
+          <li><a href="forum.html"><span class="glyphicon glyphicon-inbox"></span> Feedback</a></li>
+          <li><a href="visualization.html"><span class="glyphicon glyphicon-map-marker"></span> Enrollment Data</a></li>
+          <li class="active"><a href="activity.html"><span class="glyphicon glyphicon-th-list"></span> Activities</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="navblocker">
+
+  <div id="map">
+    <div class = "row">
+      <div class="col-sm-12">
+        <h1>Try out a game that every camper learns how to create in Javascript!</h1>
+        <h4 id="blurb">Our campers get the chance to develop their programming skills as part of the activities offered.</h4>
+      </div>
+    </div>
+  </div>
+
+  <img id = "img" class="img-responsive" src="images/mtn.png" alt="Mountain">
+
+  <div id="actvOne">
+    <div class="alert alert-danger fade in" id="lose" style="display: none">
+        <strong>GAME OVER</strong>
+    </div>
+    <div class="alert alert-success fade in" id="win" style="display: none">
+      <strong>CONGRATULATIONS! You win</strong>
+    </div>
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+    <div id="btn">
+        <button type="button" class="btn" id="play" onclick="playGame()">Press to Play!</button>
+    </div>
+  </div>
+
+  <div id="map">
+    <div class = "row">
+      <div class="col-sm-12">
+        <h2>Watch a video of just one of the many adventures our campers have taken! It's pretty neat!</h2>
+        <h5 id="blurb">Our campers get the chance to experience the great outdoors as part of the activities offered.</h5>
+      </div>
+    </div>
+  </div>
+
+  <img id = "img" class="img-responsive" src="images/gc.png" alt="River">
+
+  <div class = "row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-8">
+      <div id="actvTwo" class="embed-responsive embed-responsive-16by9">
+        <iframe src="https://www.youtube.com/embed/ismOxbcdAb4" allowfullscreen></iframe>
+      </div>
+    </div>
+    <div class="col-sm-2"></div>
+  </div>
+
+</body>
+</html>

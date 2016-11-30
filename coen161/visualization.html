@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Enrollment</title>
+<link rel="shortcut icon" href="favicon.ico"/>
+<link rel="bootstrap stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<link rel="navbar stylesheet" href="css/navbar.css">
+
+<script type="text/javascript">
+
+      // Load the Visualization API and the corechart package
+      google.charts.load('44', {'packages':['corechart']});
+
+      // Set a callback to run when the Google Visualization API is loaded.
+      google.charts.setOnLoadCallback(drawChartOne);
+      google.charts.setOnLoadCallback(drawChartTwo);
+      google.charts.setOnLoadCallback(drawChartThree);
+      google.charts.setOnLoadCallback(drawChartFour);
+      // Callback that creates and populates a data table,
+      // instantiates the pie chart, passes in the data and
+      // draws it.
+      function drawChartOne() {
+        var count = [0,0,0,0,0,0,0];
+        //Pulls data from mysql database
+        $.ajax({type:'GET', url: 'getData.php', dataType:'json', success: function(response) {
+          for(i=0;i<response.length;i++){
+            if (response[i].session=='San Francisco'){
+              count[0]++;
+            }
+            if (response[i].session=='San Diego'){
+              count[1]++;
+            }
+            if (response[i].session=='Lake Tahoe'){
+              count[2]++;
+            }
+            if (response[i].session=='Seattle'){
+              count[3]++;
+            }
+            if (response[i].session=='Austin'){
+              count[4]++;
+            }
+            if (response[i].session=='New York'){
+              count[5]++;
+            }
+            if (response[i].session=='Miami'){
+              count[6]++;
+            }
+          }
+          // Create the data table.
+          var data = new google.visualization.DataTable();
+          data.addColumn('string', 'Location');
+          data.addColumn('number', 'Enrollment Numbers');
+          data.addRows([
+              ['San Fran', count[0]],
+              ['San Diego', count[1]],
+              ['Lake Tahoe', count[2]],
+              ['Seattle', count[3]],
+              ['Austin', count[4]],
+              ['Miami', count[5]],
+              ['New York', count[6]]
+          ]);
+
+          // Set chart options
+          var options = {'title':'Enrollment By Location',
+                         'width':400,
+                         'height':300,
+                         'titleTextStyle': {
+                           color:'white',
+                           auraColor: '#000080'
+                         },
+                         'legend': {textStyle: {
+                           color: 'white',
+                           auraColor: '#000080'
+                         }},
+                         'backgroundColor': { fill:'transparent' },
+                         animation:{
+                            duration: 1000,
+                            easing: 'out',
+                            startup: true
+                          },
+                         colors: ['#cc0000', '#ff0000', '#ff3333', '#ff6666', '#ff8080', '#ffb3b3', '#ffe6e6']
+                       };
+
+          // Instantiate and draw our chart, passing in some options.
+          var chart = new google.visualization.PieChart(document.getElementById('chart_div1'));
+          chart.draw(data, options);
+        }});
+      }
+      function drawChartTwo() {
+        var count = [0,0];
+        //Pulls data from mysql database
+        $.ajax({type:'GET', url: 'getData.php', dataType:'json', success: function(response) {
+          for(i=0;i<response.length;i++){
+            if (response[i].gender=='Male'){
+              count[0]++;
+            }
+            if (response[i].gender=='Female'){
+              count[1]++;
+            }
+          }
+          // Create the data table.
+          var ratio = new google.visualization.DataTable();
+          ratio.addColumn('string', 'Gender');
+          ratio.addColumn('number', 'Amount');
+          ratio.addRows([
+            ['Male', count[0]],
+            ['Female', count[1]]
+          ]);
+
+          // Set chart options
+          var styles = {'title':'Male to Female Ratio',
+                         'width':400,
+                         'height':300,
+                         'titleTextStyle': {
+                           color:'white',
+                           auraColor: '#000080'
+                         },
+                         'legend': {textStyle: {
+                           color: 'white',
+                           auraColor: '#000080'
+                         }},
+                         'backgroundColor': { fill:'transparent' },
+                         animation:{
+                            duration: 1000,
+                            easing: 'out',
+                            startup: true
+                          },
+                         colors: ['#000080', '#cc0000']
+                       };
+
+          // Instantiate and draw our chart, passing in some options.
+          var chart = new google.visualization.PieChart(document.getElementById('chart_div2'));
+          chart.draw(ratio, styles);
+        }});
+      }
+      function drawChartThree() {
+        var count = [0,0,0,0,0,0,0];
+        //Pulls data from mysql database
+        $.ajax({type:'GET', url: 'getData.php', dataType:'json', success: function(response) {
+          for(i=0;i<response.length;i++){
+            if (response[i].grade=='6'){
+              count[0]++;
+            }
+            if (response[i].grade=='7'){
+              count[1]++;
+            }
+            if (response[i].grade=='8'){
+              count[2]++;
+            }
+            if (response[i].grade=='9'){
+              count[3]++;
+            }
+            if (response[i].grade=='10'){
+              count[4]++;
+            }
+            if (response[i].grade=='11'){
+              count[5]++;
+            }
+            if (response[i].grade=='12'){
+              count[6]++;
+            }
+          }
+          // Create the data table.
+          var data = new google.visualization.arrayToDataTable([
+                  ['Grade', 'Enrolled', { role: 'style' } ],
+                  ['6th', count[0],'#b3b3ff'],
+                  ['7th', count[1],'#8080ff'],
+                  ['8th', count[2],'#4d4dff'],
+                  ['9th', count[3],'#1a1aff'],
+                  ['10th', count[4],'#0000e6'],
+                  ['11th', count[5],'#0000b3'],
+                  ['12th', count[6],'#000080']
+                ]);
+
+          // Set chart options
+          var options = {'title':'Upcoming Enrollment By Grade',
+                         'width':400,
+                         'height':300,
+                         'titleTextStyle': {
+                           color:'white',
+                           auraColor: '#000080'
+                         },
+                         'hAxis': { textStyle: {
+                           color: 'white',
+                           auraColor: '#000080'
+                         } },
+                         'vAxis': { textStyle: {
+                           color: 'white',
+                           auraColor: '#000080'
+                         } },
+                         'backgroundColor': { fill:'transparent' },
+                         animation:{
+                            duration: 1750,
+                            easing: 'out',
+                            startup: true
+                          },
+                          legend:{position:'none'}
+                       };
+
+          // Instantiate and draw our chart, passing in some options.
+          var chart = new google.visualization.ColumnChart(document.getElementById('chart_div3'));
+          chart.draw(data, options);
+        }});
+      }
+
+      function drawChartFour() {
+        var count = [0,0,0,0,0];
+        //Pulls data from mysql database
+        $.ajax({type:'GET', url: 'getFeedback.php', dataType:'json', success: function(response) {
+          for(i=0;i<response.length;i++){
+            if (response[i].rate=='Poor'){
+              count[0]++;
+            }
+            if (response[i].rate=='Moderate'){
+              count[1]++;
+            }
+            if (response[i].rate=='Good'){
+              count[2]++;
+            }
+            if (response[i].rate=='Very Good'){
+              count[3]++;
+            }
+            if (response[i].rate=='Excellent'){
+              count[4]++;
+            }
+          }
+          // Create the data table.
+          var data = new google.visualization.arrayToDataTable([
+                  ['Rating', 'Quantity', { role: 'style' } ],
+                  ['Poor', count[0],'#b3b3ff'],
+                  ['Moderate', count[1],'#8080ff'],
+                  ['Good', count[2],'#4d4dff'],
+                  ['Very Good', count[3],'#1a1aff'],
+                  ['Excellent', count[4],'#0000e6'],
+                ]);
+
+          // Set chart options
+          var options = {'title':'Overall Experience from Feedback',
+                         'width':600,
+                         'height':300,
+                         'titleTextStyle': {
+                           color:'white',
+                           auraColor: '#000080'
+                          },
+                         'hAxis': { textPosition: 'none' },
+                         'vAxis': { textStyle: {
+                           color: 'white',
+                           auraColor: '#000080'
+                         } },
+                         'backgroundColor': { fill:'transparent' },
+                         animation:{
+                            duration: 2500,
+                            easing: 'out',
+                            startup: true
+                          },
+                          legend:{position:'none'}
+                       };
+
+          // Instantiate and draw our chart, passing in some options.
+          var chart = new google.visualization.BarChart(document.getElementById('chart_div4'));
+          chart.draw(data, options);
+        }});
+      }
+</script>
+
+<style type="text/css">
+body{
+  margin: auto;
+  width: 100%;
+  font-family: "AvenirNext-Ultralight", Calibri, "Gill Sans", sans-serif;
+  color: white;
+  background-color: #006699;
+}
+#graph_div{
+  position:relative;
+  top:85px;
+  background: rgba(255, 255, 255, 0.25);
+}
+#map{
+  border-style: solid;
+  border-top-width: 1px;
+  border-left-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  background-color: #990000;
+  padding: 50px 20px 30px 20px;
+}
+#blurb{
+  text-indent: 50px;
+}
+#nav{
+  position: relative;
+  z-index: 100;
+}
+#navblocker{
+  height: 52px;
+}
+#img{
+  position: absolute;
+  z-index: -600;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+</style>
+</head>
+<body>
+  <div id="nav">
+    <nav class="navbar navbar-inverse" data-spy="affix">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a href="home.html"> <img id = "logo" src = "images/logo.png" width = "40" height = "40"></a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <li><a href="home.html"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+            <li><a href="schedule.html"><span class="glyphicon glyphicon-calendar"></span> Schedule</a></li>
+            <li><a href="catalog.html"><span class="glyphicon glyphicon-gift"></span> Store</a></li>
+            <li><a href="forum.html"><span class="glyphicon glyphicon-inbox"></span> Feedback</a></li>
+            <li class="active"><a href="visualization.html"><span class="glyphicon glyphicon-map-marker"></span> Enrollment Data</a></li>
+            <li><a href="activity.html"><span class="glyphicon glyphicon-th-list"></span> Activities</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div id="navblocker">
+
+  <div id="map">
+    <div class = "row">
+      <div class="col-sm-12">
+        <h1>Current Enrollment Data</h1>
+        <h4 id="blurb">Get a sense of who is going to our camps!</h4>
+      </div>
+    </div>
+  </div>
+
+  <img id = "img" class="img-responsive" src="images/riv.jpg" alt="Lift">
+
+  <div class="row" id="graph_div">
+          <div class="col-sm-4" id="chart_div1"></div>
+          <div class="col-sm-4" id="chart_div2"></div>
+          <div class="col-sm-4" id="chart_div3"></div>
+  </div>
+
+  <div class="row" id="graph_div">
+          <div class="col-sm-3"></div>
+          <div class="col-sm-6" id="chart_div4"></div>
+          <div class="col-sm-3"></div>
+  </div>
+
+</body>
+</html>

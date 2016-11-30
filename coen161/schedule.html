@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Schedule</title>
+<link rel="shortcut icon" href="favicon.ico"/>
+<link rel="bootstrap stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link rel="navbar stylesheet" href="css/navbar.css">
+<style type="text/css">
+body{
+  margin: auto;
+  width: 100%;
+  background-color: #006699;
+}
+
+#navblocker{
+  height: 52px;
+}
+
+#lake{
+  position: fixed;
+  z-index: -100000;
+}
+
+#signup{
+  margin:auto;
+  width: 80%
+}
+
+#buttons{
+  position: relative;
+  top: 105px;
+  padding: 1px 20px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+
+}
+
+h1{
+  text-align: center;
+  font-family: "AvenirNext-Ultralight", Calibri, "Gill Sans", sans-serif;
+  font-size: 60px;
+  margin-bottom: 10px;
+}
+
+h2{
+  text-align: center;
+  font-family: "AvenirNext-Ultralight", Calibri, "Gill Sans", sans-serif;
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+#schedule{
+  padding: 20px 20px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  display: none;
+}
+
+#pricing{
+  padding: 20px 20px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  display: none;
+}
+
+#signupform{
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  padding: 20px 20px 20px 20px;
+  display: none;
+}
+
+#formAlert{
+  display: none;
+}
+
+#modalButton{
+  display: none;
+}
+
+#campschedule{
+  padding: 20px 20px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  display: none;
+
+}
+
+#actualschedule{
+  display: none;
+}
+
+#emailAlert{
+  display: none;
+}
+</style>
+<script>
+
+//present signup, with passed defaults.  Hide all other options
+function gotoSignUp(session, duration){
+  if (session == "") {
+    session = "San Francisco";
+  }
+  if (duration == "") {
+    duration = "One Week";
+  }
+  $("#buttons").hide(100);
+  $("#schedule").hide(100);
+  $("#pricing").hide(100);
+  $("#session").val(session);
+  $("#duration").val(duration);
+  $("#signupform").show(700);
+}
+
+//return from signup to options
+function cancelSignUp(){
+  //clear form
+  $("#signupform").closest('form').find("input, textarea").val("");
+  $("#formAlert").hide();
+  $("#signupform").hide(100);
+  $("#buttons").show(700);
+}
+
+//show upcoming dates
+function showSchedule(){
+  $("#buttons").hide(100);
+  $("#schedule").show(700);
+
+}
+
+//return from upcoming dates to options
+function exitSchedule(){
+  $("#schedule").hide(100);
+  $("#buttons").show(700);
+}
+
+//show pricing table
+function showPricing() {
+  $("#buttons").hide(100);
+  $("#pricing").show(700);
+}
+
+//return from pricing table to options
+function exitPricing(){
+  $("#pricing").hide(100);
+  $("#buttons").show(700);
+}
+
+//check to make sure all form elements of main signup are filled out
+function check_form(){
+    var flag = true;
+    $('#signupform .form-control').each(function(){
+        if ($(this).val() == ""){
+            flag =  false;
+        }
+    });
+    return flag;
+}
+
+//check to make sure all elements of payment form are filled out
+function check_form_payment(){
+    var flag = true;
+    $('#paymentForm .form-control').each(function(){
+        if ($(this).val() == ""){
+          $(this).addClass("has-error");
+            flag =  false;
+        }
+    });
+    return flag;
+}
+
+//called when user submits the new user form
+function submitForm(){
+
+  //remove red alert classes from fields
+  $("#emailparent").removeClass("has-error");
+  $("#birthdayparent").removeClass("has-error");
+  $("#phoneparent").removeClass("has-error");
+
+  //make sure all fields are filled
+  var flag = check_form();
+  if (!flag) {
+    $("#formAlert").show(100);
+    return;
+  }
+
+  //check email valdidaty
+  var emailValid = $("#email")[0].checkValidity();
+  if(!emailValid){
+    $("#emailparent").addClass("has-error");
+  }
+
+  //check date validiatiy
+  var dateRegex = /^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/;
+  var birthdayValid = dateRegex.test($("#birthday").val());
+  if(!birthdayValid){
+    $("#birthdayparent").addClass("has-error");
+  }
+
+  //check phone validiatiy
+  var phoneRegex = /^(\([0-9]{3}\)|[0-9]{3}-)[0-9]{3}-[0-9]{4}$/;
+  var phoneValid = phoneRegex.test($("#phone").val())
+  if(!phoneValid){
+    $("#phoneparent").addClass("has-error");
+  }
+
+  //if preceeding are all valid, then continue
+  if(!emailValid||!birthdayValid||!phoneValid){
+    return;
+  }
+
+  $("#formAlert").hide();
+  var data = $('#signupform').serialize();
+  $.ajax({type:'POST', url: 'addUser.php', data:data, success: function(response) {
+    //format the modal paymetn view from signup options
+    if($("#duration").val() == "One Week"){
+      $("#totalPrice").html("$500");
+      if(response=="discount"){
+        $("#totalPrice").html("$450 -- with 10% discount for more than one child.");
+      }
+    }
+    else {
+      $("#totalPrice").html("$1100");
+      if(response=="discount"){
+        $("#totalPrice").html("$990 -- with 10% discount for more than one child.");
+      }
+    }
+    $("#paymentemail").val($("#email").val());
+    //trigger modal
+    $("#modalButton").click();
+  }});
+
+}
+
+//called when user submits online payment
+function submitPayment(){
+
+  //remove error classes
+  $("#creditcardparent").removeClass("has-error");
+  $("#commentparent").removeClass("has-error");
+  //check if fields are filled
+  var flag = check_form_payment();
+  if(!flag){
+    return;
+  }
+  //check creditcard validiaty
+
+  // var ccregex = /^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\d{3})\d{11})$/;
+  var ccregex = /^[0-9]{16}$/;
+  var ccvalid = ccregex.test($("#creditcard").val());
+  if(!ccvalid){
+    $("#creditcardparent").addClass("has-error");
+  }
+  var data = $('#paymentForm').serialize();
+  $.ajax({type:'POST', url: 'addPayment.php', data:data, success: function(response) {
+    //trigger modal close
+    $("#modalDismiss").click();
+    showSuccess();
+  }});
+}
+//called on successful signup, shows daily schedule
+function showSuccess(){
+  $("#signupform").closest('form').find("input, textarea").val("");
+  $("#emailAlert").hide();
+  $("#formAlert").hide();
+  $("#signupform").hide(100);
+  $("#schedulelogin").hide();
+  $("#actualschedule").show();
+  $("#campschedule").show(700);
+}
+
+//show daily schedule div (either email verification or actualschedule)
+function viewDaily(){
+  $("#buttons").hide(100);
+  $("#campschedule").show(700);
+}
+
+//return from daily schedule to options
+function exitDaily(){
+  $("#actualschedule").hide();
+  $("#schedulelogin").show();
+  $("#campschedule").hide(100);
+  $("#buttons").show(700);
+}
+
+//called to check if email entered to view daily schedule is registered
+function getSchedule(){
+  var data = $('#emailVer').serialize();
+  $.ajax({type:'POST', url: 'dailyVerify.php', data:data, success: function(response) {
+    if(response=="invalid"){
+      $("#emailAlert").show();
+    }
+    else if(response=="success"){
+      $("#schedulelogin").hide();
+      $("#actualschedule").show();
+    }
+    else{
+      alert(response);
+    }
+  }});
+}
+
+</script>
+</head>
+<body>
+
+  <nav class="navbar navbar-inverse" data-spy="affix">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a href="home.html"> <img id = "logo" src = "images/logo.png" width = "40" height = "40"></a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="home.html"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+          <li class="active"><a href="schedule.html"><span class="glyphicon glyphicon-calendar"></span> Schedule</a></li>
+          <li><a href="catalog.html"><span class="glyphicon glyphicon-gift"></span> Store</a></li>
+          <li><a href="forum.html"><span class="glyphicon glyphicon-inbox"></span> Feedback</a></li>
+          <li><a href="visualization.html"><span class="glyphicon glyphicon-map-marker"></span> Enrollment Data</a></li>
+          <li><a href="activity.html"><span class="glyphicon glyphicon-th-list"></span> Activities</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="navblocker"></div>
+  <img id = "lake" class="img-responsive" src="images/blurredlake.jpg" alt="Lake">
+
+<div id="signup">
+  <div id="buttons">
+    <h1>Sign Up</h1>
+    <div class="btn-group btn-group-justified">
+      <a href="#" class="btn btn-primary" onclick="gotoSignUp('','')">Sign Up</a>
+      <a href="#" class="btn btn-primary" onclick="showSchedule()">Upcoming Camps</a>
+      <a href="#" class="btn btn-primary" onclick="showPricing()">Pricing</a>
+      <a href="#" class="btn btn-primary" onclick="viewDaily()">Daily Schedule</a>
+    </div>
+  </div>
+  <form id = "signupform" class="form-horizontal" role="form">
+
+    <div id="formAlert" class="alert alert-danger">
+      <strong>Missing Fields!</strong> Please fill out of the sign up fields to proceed.
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="session">Session:</label>
+      <div class="col-sm-10">
+      <select class="form-control" id="session" name="session">
+        <option>San Francisco</option>
+        <option>San Diego</option>
+        <option>Lake Tahoe</option>
+        <option>Seattle</option>
+        <option>Austin</option>
+        <option>New York</option>
+        <option>Miami</option>
+      </select>
+    </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="firstname">First Name:</label>
+      <div class="col-sm-10">
+        <input type="text" name="firstname" class="form-control" id="firstname" placeholder="Child's First Name">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="lastname">Last Name:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="lastname" id="lastname" placeholder="Child's Last Name">
+      </div>
+    </div>
+    <div class="form-group" id = "birthdayparent">
+      <label class="control-label col-sm-2" for="birthday">Birthday:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="birthday" id="birthday" placeholder="yyyy-mm-dd">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="parentname">Parent's Name:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="parentname" id="parentname" placeholder="First Last">
+      </div>
+    </div>
+    <div class="form-group" id="emailparent">
+      <label class="control-label col-sm-2" for="email">Email:</label>
+      <div class="col-sm-10">
+        <input type="email" class="form-control" name="email" id="email" placeholder="email@example.com">
+      </div>
+    </div>
+    <div class="form-group" id="phoneparent">
+      <label class="control-label col-sm-2" for="phone">Phone Number:</label>
+      <div class="col-sm-10">
+        <input type="tel" class="form-control" name="phone" id="phone" placeholder="xxx-xxx-xxxx">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="grade">Grade:</label>
+      <div class="col-sm-10">
+      <select class="form-control" name="grade" id="grade">
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+        <option>9</option>
+        <option>10</option>
+        <option>11</option>
+        <option>12</option>
+      </select>
+    </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="gender">Gender:</label>
+      <div class="col-sm-10">
+      <select class="form-control" name="gender" id="gender">
+        <option>Male</option>
+        <option>Female</option>
+      </select>
+    </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="school">School:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="school" id="school" placeholder="Child's School">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="duration">Duration:</label>
+      <div class="col-sm-10">
+      <select class="form-control" name="duration" id="duration">
+        <option>One Week</option>
+        <option>Two Weeks</option>
+      </select>
+    </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-4">
+        <button type="button" class="btn btn-default" onclick="submitForm()">Submit</button>
+        <button type="button" class="btn btn-danger" onclick="cancelSignUp()">Cancel</button>
+        <button type="button" id = "modalButton" class="btn btn-default" data-toggle="modal" data-target="#myModal">Modal Button</button>
+
+      </div>
+    </div>
+
+  </form>
+
+  <div id="schedule">
+    <button type="button" class="btn btn-default btn-sm" onclick="exitSchedule()"><span class="glyphicon glyphicon-remove"></span></button>
+    <h1>Schedule</h1>
+    <ul class="list-group">
+      <a href="#" onclick="gotoSignUp('San Francisco', 'Two Weeks')" class="list-group-item"><span class="badge">March 14-28</span> San Francisco</a>
+      <a href="#" onclick="gotoSignUp('San Diego', 'Two Weeks')" class="list-group-item"><span class="badge">April 6-20</span> San Diego</a>
+      <a href="#" onclick="gotoSignUp('Lake Tahoe', 'Two Weeks')" class="list-group-item"><span class="badge">May 4-18</span> Lake Tahoe</a>
+      <a href="#" onclick="gotoSignUp('Seattle', 'Two Weeks')" class="list-group-item"><span class="badge">June 10-24</span> Seattle</a>
+      <a href="#" onclick="gotoSignUp('Austin', 'Two Weeks')" class="list-group-item"><span class="badge">July 1-15</span> Austin</a>
+      <a href="#" onclick="gotoSignUp('New York', 'Two Weeks')" class="list-group-item"><span class="badge">August 10-24</span> New York</a>
+      <a href="#" onclick="gotoSignUp('Miami', 'Two Weeks')" class="list-group-item"><span class="badge">September 16-30</span> Miami</a>
+    </ul>
+  </div>
+
+  <div id="pricing">
+    <button type="button" class="btn btn-default btn-sm" onclick="exitPricing()"><span class="glyphicon glyphicon-remove"></span></button>
+    <h1>Pricing</h1>
+    <ul class="list-group">
+      <a href="#" onclick="gotoSignUp('San Francisco', 'One Week')" class="list-group-item"><span class="badge">$500</span> One Week</a>
+      <a href="#" onclick="gotoSignUp('San Francisco', 'Two Weeks')" class="list-group-item"><span class="badge">$1100</span> Two Weeks</a>
+    </ul>
+  </div>
+
+
+  <div id="campschedule">
+    <button type="button" class="btn btn-default btn-sm" onclick="exitDaily()"><span class="glyphicon glyphicon-remove"></span></button>
+    <h2>Check out the daily schedule!</h2>
+    <div id = "schedulelogin">
+      <form id = "emailVer" class="form-horizontal" role="form">
+        <div id="emailAlert" class="alert alert-danger">
+          <strong>Invalid!</strong> The email you entered is invalid.
+        </div>
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="things">Email:</label>
+          <div class="col-sm-10">
+            <input type="text" name="checker" class="form-control" id="things" placeholder="Enter registered email to view schedule.">
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-4">
+            <button type="button" name="submiter" class="btn btn-default" onclick="getSchedule()">Submit</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div id = "actualschedule">
+      <ul class="list-group">
+        <li class="list-group-item"><span class="badge">9am</span>Wake up call</li>
+        <li class="list-group-item"><span class="badge">9:30am-10:30am</span>Breakfast and morning activities. </li>
+        <li class="list-group-item"><span class="badge">10:30am - 12pm</span> Free time.</li>
+        <li class="list-group-item"><span class="badge">12pm-1:30pm</span> Lunch.</li>
+        <li class="list-group-item"><span class="badge">1:30pm-6:30pm</span> Adventure of the day.</li>
+        <li class="list-group-item"><span class="badge">8pm-10pm</span> Coding class.</li>
+        <li class="list-group-item"><span class="badge">1am</span> Bed time.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Payment modal screeen -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Pay Online</h4>
+      </div>
+      <div class="modal-body">
+        <div class="panel panel-default">
+          <div class="panel-heading">Your Order Total:</div>
+          <div id="totalPrice" class="panel-body"></div>
+        </div>
+        <form id="paymentForm" role="form">
+          <div class="form-group" id="creditcardparent">
+            <label for="creditcard">Credit Card No:</label>
+            <input type="password" class="form-control" name="creditcard" id="creditcard">
+          </div>
+          <div class="form-group">
+            <label for="paymentemail">Email address:</label>
+            <input type="email" class="form-control" name="paymentemail" id="paymentemail" disabled>
+          </div>
+          <div class="form-group" id="commentparent">
+            <label for="comment">Special Instructions:</label>
+            <textarea class="form-control" rows="5" name="comment" id="comment">Add Comments Here</textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="modalDismiss" onclick="showSuccess()" type="button" class="btn btn-default" data-dismiss="modal">Pay Later</button>
+        <button type="button"  class="btn btn-default" onclick="submitPayment()">Submit Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
